@@ -14,11 +14,11 @@
 //!     let v = [1, 2, 3, 4, 5, 6].iter_map(move |iter| {
 //!         i += 1;
 //!         if i % 3 == 0 {
-//!             Some(&0)
+//!             Some(0)
 //!         } else {
-//!             iter.next()
+//!             iter.next().copied()
 //!         }
-//!     }).map(|&n| n).collect::<Vec<_>>();
+//!     }).collect::<Vec<_>>();
 //!  
 //!     assert_eq!(v, vec![1, 2, 0, 3, 4, 0, 5, 6, 0]);
 //! }
@@ -74,10 +74,10 @@ where F: FnMut(&mut D) -> Option<R>,
 
 /// A trait to add the `.iter_map()` method to any existing class.
 ///
-pub trait IntoIterMap<F, I, R>
+pub trait IntoIterMap<F, I, R, T>
 //
 where F: FnMut(&mut I) -> Option<R>,
-      I: Iterator<Item = R>,
+      I: Iterator<Item = T>,
 {
     /// Returns a `ParamFromFnIter` iterator which wraps the iterator it's 
     /// invoked on.
@@ -92,11 +92,11 @@ where F: FnMut(&mut I) -> Option<R>,
 
 /// Adds `.iter_map()` method to all IntoIterator classes.
 ///
-impl<F, I, J, R> IntoIterMap<F, I, R> for J
+impl<F, I, J, R, T> IntoIterMap<F, I, R, T> for J
 //
 where F: FnMut(&mut I) -> Option<R>,
-      I: Iterator<Item = R>,
-      J: IntoIterator<Item = R, IntoIter = I>,
+      I: Iterator<Item = T>,
+      J: IntoIterator<Item = T, IntoIter = I>,
 {
     /// Returns an iterator that invokes the callback in `.next()`, passing it
     /// the original iterator as an argument. The callback can return any
@@ -119,11 +119,11 @@ mod tests {
         let v = [1, 2, 3, 4, 5, 6].iter_map(move |iter| {
             i += 1;
             if i % 3 == 0 {
-                Some(&0)
+                Some(0)
             } else {
-                iter.next()
+                iter.next().copied()
             }
-        }).map(|&n| n).collect::<Vec<_>>();
+        }).collect::<Vec<_>>();
         assert_eq!(v, vec![1, 2, 0, 3, 4, 0, 5, 6, 0]);
     }
 }
