@@ -1,11 +1,11 @@
 # iter-map
-`iter-map` adds a new method to the Rust `Iterator` classes, `.map_iter()` that gives the ultimate flexibility in how the data from the iterator is transformed. The method takes a callback that receives a reference to the iterator on each invocation. `.map_iter()` produces a new iterator that calls the callback on each infocation of `.next()`.
+`iter-map` adds a new method to the Rust `Iterator` classes, `.map_iter()`, that gives the ultimate flexibility in how the data from the iterator is transformed. The method takes a callback as a parameter and produces a new iterator that invokes the callback on each invocation of its `.next()` method and passes it a reference to the original iterator. 
 
-Sometimes to accomlish very specific things with the standard iterators becomes very complex. The code could be more simply written with a `for` loop or using `.for_each()` to populate an external object. This provides similar capability, but keeps more in the spirit of functional programming with iterators.
+Sometimes to accomlish very specific things with the standard iterator methods becomes very complex. The code could be more simply written with a `for` loop or using `.for_each()` to populate an external object. This provides similar capability, but allows a more functional approach if that's preferred.
 
 ## Example Usage
 
-The standard iterator intersperse methods don't allow for interspersing at arbitrary points in the stream of items. The code below shows a simple transform to inject an extra character before each `o`.
+Below is a simple example of interspersing an extra character before each occurence of `o`.
 
 ```rust
  use iter_map::IntoIterMap;
