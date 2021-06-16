@@ -21,9 +21,7 @@ Below is a simple example of interspersing an extra character before each occure
              b = true;
              iter.next()
          }
-     } else { 
-         None 
-     }
+     } else { None }
  }).collect::<String>();
 
  assert_eq!(&s, "hell0o w0orld!");
