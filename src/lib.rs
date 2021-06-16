@@ -43,12 +43,74 @@ where F: FnMut(&mut D) -> Option<R>,
     /// does pretty much the same thing as `std::iter::from_fn()` except the 
     /// callback signature of this class takes a data argument.
     ///
-    /// # Arguments
-    /// `data`      - Data that will be passed to the callback on each 
-    ///               invocation.
-    /// `callback`  - The callback that gets invoked when `.next()` is invoked
-    ///               on the returned iterator.
+    /// This provides a flexible and simple way to create new iterators by 
+    /// defining a callback. 
     ///
+    /// One application for this could be to implement functions that operate
+    /// similar to generators. The example below shows how one could implement a
+    /// chunking "generator" that breaks up the items from the iterator passed
+    /// in to `chunker()` into chunks. This could also be achieved with the 
+    /// standard function, `std::iter::from_fn()`.
+    ///
+    /// ```
+    /// use iter_map::ParamFromFnIter;
+    /// 
+    /// use std::cell::RefCell;
+    /// use std::rc::Rc;
+    ///
+    /// fn chunker<I>(chunk_size    : usize, 
+    ///               data          : I
+    ///              ) -> impl Iterator<Item = impl Iterator<Item = I::Item>>
+    /// where I: Iterator
+    /// {
+    ///     let p = Rc::new(RefCell::new(data.peekable()));
+    ///     ParamFromFnIter::new(
+    ///         (),
+    ///         move |_| {
+    ///             if p.borrow_mut().peek().is_some() {
+    ///                 Some(chunk(chunk_size, p.clone()))
+    ///             } else {
+    ///                 None
+    ///             }
+    ///         })
+    /// }
+    ///
+    /// fn chunk<I, T>(chunk_size   : usize, 
+    ///                data         : Rc<RefCell<I>>
+    ///               ) -> impl Iterator<Item = I::Item>
+    /// where I: Iterator<Item = T>
+    /// {
+    ///     let mut i = 0;
+    ///     ParamFromFnIter::new(
+    ///         (),
+    ///         move |_| {
+    ///             if i < chunk_size {
+    ///                 i += 1;
+    ///                 data.borrow_mut().next()
+    ///             } else {
+    ///                 None
+    ///             }
+    ///         })
+    /// }
+    ///
+    /// let mut result = String::new();
+    ///
+    /// for s in chunker(2, [1, 2, 3, 4, 5, 6].iter()) {
+    ///     for n in s {
+    ///         result.push_str(&format!("{}, ", n));
+    ///     }
+    ///     result.push('\n');
+    /// }
+    ///
+    /// assert_eq!(&result, "1, 2, \n3, 4, \n5, 6, \n");
+    /// ```
+    ///
+    /// # Arguments
+    /// * `data`      - Data that will be passed to the callback on each 
+    ///                 invocation.
+    /// * `callback`  - The callback that gets invoked when `.next()` is invoked
+    ///                 on the returned iterator.
+    ///    
     pub fn new(data: D, callback: F) -> Self
     {
         ParamFromFnIter { callback, data }
@@ -56,65 +118,6 @@ where F: FnMut(&mut D) -> Option<R>,
 }
 
 /// Implements Iterator for ParamFromFnIter. 
-///
-/// This class can be used to implement functions that operate similar to
-/// generators. The example below shows how one could implement a chunking
-/// "generator" that breaks up the items from the iterator passed in to
-/// `chunker()` into chunks. This could also be achieved with the standard
-/// function, `std::iter::from_fn()`.
-///
-/// ```
-/// use iter_map::ParamFromFnIter;
-/// 
-/// use std::cell::RefCell;
-/// use std::rc::Rc;
-///
-/// fn chunker<I>(chunk_size    : usize, 
-///               data          : I
-///              ) -> impl Iterator<Item = impl Iterator<Item = I::Item>>
-/// where I: Iterator
-/// {
-///     let p = Rc::new(RefCell::new(data.peekable()));
-///     ParamFromFnIter::new(
-///         (),
-///         move |_| {
-///             if p.borrow_mut().peek().is_some() {
-///                 Some(chunk(chunk_size, p.clone()))
-///             } else {
-///                 None
-///             }
-///         })
-/// }
-///
-/// fn chunk<I, T>(chunk_size   : usize, 
-///                data         : Rc<RefCell<I>>
-///               ) -> impl Iterator<Item = I::Item>
-/// where I: Iterator<Item = T>
-/// {
-///     let mut i = 0;
-///     ParamFromFnIter::new(
-///         (),
-///         move |_| {
-///             if i < chunk_size {
-///                 i += 1;
-///                 data.borrow_mut().next()
-///             } else {
-///                 None
-///             }
-///         })
-/// }
-///
-/// let mut result = String::new();
-///
-/// for s in chunker(2, [1, 2, 3, 4, 5, 6].iter()) {
-///     for n in s {
-///         result.push_str(&format!("{}, ", n));
-///     }
-///     result.push('\n');
-/// }
-///
-/// assert_eq!(&result, "1, 2, \n3, 4, \n5, 6, \n");
-/// ```
 ///
 impl<F, D, R> Iterator for ParamFromFnIter<F, D>
 //
@@ -142,9 +145,9 @@ where F: FnMut(&mut I) -> Option<R>,
     /// invoked on.
     ///
     /// # Arguments
-    /// `callback`  - The callback that gets invoked by `.next()`.
-    ///               This callback is passed the original iterator as its
-    ///               parameter.
+    /// * `callback`  - The callback that gets invoked by `.next()`.
+    ///                 This callback is passed the original iterator as its
+    ///                 parameter.
     ///
     fn iter_map(self, callback: F) -> ParamFromFnIter<F, I>;
 }
@@ -161,6 +164,24 @@ where F: FnMut(&mut I) -> Option<R>,
     /// the original iterator as an argument. The callback can return any
     /// arbitrary type within an `Option`.
     ///
+    /// ```
+    /// use iter_map::IntoIterMap;
+    ///
+    /// let mut b = true;
+    ///
+    /// let s = "hello world!".chars().peekable().iter_map(|iter| {
+    ///     if let Some(&ch) = iter.peek() {
+    ///         if ch == 'o' && b {
+    ///             b = false;
+    ///             Some('0')
+    ///         } else {
+    ///             b = true;
+    ///             iter.next()
+    ///         }
+    ///     } else { None }}).collect::<String>();
+    ///
+    /// assert_eq!(&s, "hell0o w0orld!");
+    /// ```
     fn iter_map(self, callback: F) -> ParamFromFnIter<F, I>
     {
         ParamFromFnIter::new(self.into_iter(), callback)
