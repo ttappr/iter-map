@@ -21,7 +21,10 @@ The standard iterator intersperse methods don't allow for interspersing at arbit
              b = true;
              iter.next()
          }
-     } else { None }}).collect::<String>();
+     } else { 
+         None 
+     }
+ }).collect::<String>();
 
  assert_eq!(&s, "hell0o w0orld!");
 ```
