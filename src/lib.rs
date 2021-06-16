@@ -55,7 +55,66 @@ where F: FnMut(&mut D) -> Option<R>,
     }
 }
 
-/// Implements Iterator for ParamFromFnIter.
+/// Implements Iterator for ParamFromFnIter. 
+///
+/// This class can be used to implement functions that operate similar to
+/// generators. The example below shows how one could implement a chunking
+/// "generator" that breaks up the items from the iterator passed in to
+/// `chunker()` into chunks. This could also be achieved with the standard
+/// function, `std::iter::from_fn()`.
+///
+/// ```
+/// use iter_map::ParamFromFnIter;
+/// 
+/// use std::cell::RefCell;
+/// use std::rc::Rc;
+///
+/// fn chunker<I>(chunk_size    : usize, 
+///               data          : I
+///              ) -> impl Iterator<Item = impl Iterator<Item = I::Item>>
+/// where I: Iterator
+/// {
+///     let p = Rc::new(RefCell::new(data.peekable()));
+///     ParamFromFnIter::new(
+///         (),
+///         move |_| {
+///             if p.borrow_mut().peek().is_some() {
+///                 Some(chunk(chunk_size, p.clone()))
+///             } else {
+///                 None
+///             }
+///         })
+/// }
+///
+/// fn chunk<I, T>(chunk_size   : usize, 
+///                data         : Rc<RefCell<I>>
+///               ) -> impl Iterator<Item = I::Item>
+/// where I: Iterator<Item = T>
+/// {
+///     let mut i = 0;
+///     ParamFromFnIter::new(
+///         (),
+///         move |_| {
+///             if i < chunk_size {
+///                 i += 1;
+///                 data.borrow_mut().next()
+///             } else {
+///                 None
+///             }
+///         })
+/// }
+///
+/// let mut result = String::new();
+///
+/// for s in chunker(2, [1, 2, 3, 4, 5, 6].iter()) {
+///     for n in s {
+///         result.push_str(&format!("{}, ", n));
+///     }
+///     result.push('\n');
+/// }
+///
+/// assert_eq!(&result, "1, 2, \n3, 4, \n5, 6, \n");
+/// ```
 ///
 impl<F, D, R> Iterator for ParamFromFnIter<F, D>
 //
