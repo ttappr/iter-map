@@ -7,7 +7,7 @@ Sometimes to accomlish very specific things with the standard iterators becomes 
 
 The standard iterator intersperse methods don't allow for interspersing at arbitrary points in the stream of items. The code below shows a simple transform to inject an extra character before each `o`.
 
-```
+```rust
  use iter_map::IntoIterMap;
 
  let mut b = true;
