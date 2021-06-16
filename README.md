@@ -1,5 +1,5 @@
 # iter-map
-`iter-map` adds a new method to the Rust `Iterator` classes, `.map_iter()`, that gives the ultimate flexibility in how the data from the iterator is transformed. The method takes a callback as a parameter and produces a new iterator that invokes the callback on each invocation of its `.next()` method and passes it a reference to the original iterator. 
+`iter-map` adds a new method to the Rust `IntoIterator` classes, `.map_iter()`, that gives the ultimate flexibility in how the data from the iterator is transformed. The method takes a callback as a parameter and produces a new iterator that invokes the callback on each invocation of its `.next()` method and passes it a reference to the original iterator. 
 
 Sometimes to accomlish very specific things with the standard iterator methods becomes very complex. The code could be more simply written with a `for` loop or using `.for_each()` to populate an external object. This provides similar capability, but allows a more functional approach if that's preferred.
 
@@ -27,4 +27,4 @@ Below is a simple example of interspersing an extra character before each occure
  assert_eq!(&s, "hell0o w0orld!");
 ```
 
-This is just one possible application of `.iter_map()`. 
+This is just one possible application of `.iter_map()`.
